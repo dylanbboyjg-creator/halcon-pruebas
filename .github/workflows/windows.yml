@@ -18,9 +18,14 @@ jobs:
         run: |
           $v = "${env:GITHUB_REF_NAME}".TrimStart('v')
           npm version --no-git-tag-version --allow-same-version $v
-      - run: npx electron-builder --win --publish always
+      # electron-builder publicando solo creo dos releases para la misma etiqueta (carrera entre subidas): se publica aparte.
+      - run: npx electron-builder --win --publish never
+      - name: Publicar el release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $v = "${env:GITHUB_REF_NAME}".TrimStart('v')
+          gh release create $env:GITHUB_REF_NAME "dist/halcon-pruebas-$v.exe" "dist/halcon-pruebas-$v.exe.blockmap" "dist/latest.yml" --title $env:GITHUB_REF_NAME --notes "Version de prueba"
   humo:
     needs: armar
     runs-on: windows-latest
