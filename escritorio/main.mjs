@@ -1,12 +1,14 @@
 import { app, BrowserWindow, dialog } from 'electron';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { networkInterfaces } from 'node:os';
 import { randomBytes } from 'node:crypto';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import QRCode from 'qrcode';
+import pkg from 'electron-updater';
 import { iniciarNucleo } from '../nucleo/servidor.mjs';
 
+const { autoUpdater } = pkg;
 const PUERTO = 47800;
 
 if (!app.requestSingleInstanceLock()) app.quit();
@@ -38,6 +40,20 @@ async function arrancar() {
     query: { version: app.getVersion(), ip, puerto: String(PUERTO), token, qr },
   });
   app.on('window-all-closed', () => app.quit());
+
+  if (app.isPackaged) actualizar(join(carpeta, 'actualizador.log'));
+}
+
+// Una linea por evento en actualizador.log; al bajar la version nueva se instala en silencio y se reabre.
+function actualizar(archivoLog) {
+  const anotar = (evento, detalle = '') => appendFileSync(archivoLog, `${new Date().toISOString()} ${evento} ${detalle}`.trimEnd() + '\n');
+  autoUpdater.on('checking-for-update', () => anotar('checking-for-update'));
+  autoUpdater.on('update-available', (i) => anotar('update-available', i.version));
+  autoUpdater.on('update-not-available', (i) => anotar('update-not-available', i.version));
+  autoUpdater.on('download-progress', (p) => anotar('download-progress', `${Math.round(p.percent)}%`));
+  autoUpdater.on('update-downloaded', (i) => { anotar('update-downloaded', i.version); autoUpdater.quitAndInstall(true, true); });
+  autoUpdater.on('error', (e) => anotar('error', String(e?.message ?? e).replace(/\s+/g, ' ')));
+  autoUpdater.checkForUpdates().catch((e) => anotar('error', String(e?.message ?? e).replace(/\s+/g, ' ')));
 }
 
 app.on('second-instance', () => {

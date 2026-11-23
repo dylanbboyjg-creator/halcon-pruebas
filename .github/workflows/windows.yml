@@ -36,3 +36,23 @@ jobs:
         run: |
           $v = "${env:GITHUB_REF_NAME}".TrimStart('v')
           ./pruebas/humo-windows.ps1 -Instalador "${{ runner.temp }}\halcon-pruebas-$v.exe" -Version $v
+  actualizacion:
+    needs: armar
+    if: github.ref_name != 'v0.0.1'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prueba de actualizacion
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $v = "${env:GITHUB_REF_NAME}".TrimStart('v')
+          ./pruebas/actualizacion-windows.ps1 -De 0.0.1 -A $v
+      - name: Subir actualizador.log
+        if: always()
+        # El contexto env de Actions no ve %APPDATA%: ruta fija del usuario del runner.
+        uses: actions/upload-artifact@v4
+        with:
+          name: actualizador-log
+          path: C:\Users\runneradmin\AppData\Roaming\Halcon Pruebas\actualizador.log
+          if-no-files-found: warn
