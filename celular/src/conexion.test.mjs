@@ -23,3 +23,7 @@ test('acepta 10.x y 172.16-31.x', () => {
   assert.equal(leerQr('{"h":"10.0.0.5","p":47800,"t":"a","id":"x"}').h, '10.0.0.5');
   assert.equal(leerQr('{"h":"172.20.1.1","p":47800,"t":"a","id":"x"}').h, '172.20.1.1');
 });
+test('rechaza ceros a la izquierda y acepta direcciones normales', () => {
+  for (const h of ['010.0.0.1', '192.168.01.1']) assert.throws(() => leerQr(`{"h":"${h}","p":47800,"t":"a","id":"x"}`), /QR no válido/);
+  for (const h of ['10.0.0.5', '172.20.1.1', '192.168.0.42']) assert.equal(leerQr(`{"h":"${h}","p":47800,"t":"a","id":"x"}`).h, h);
+});
