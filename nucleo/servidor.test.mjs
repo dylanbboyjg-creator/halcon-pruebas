@@ -26,6 +26,14 @@ test('sin token o con token equivocado da 401', async () => {
   await n.cerrar();
 });
 
+test('token de otra longitud da 401 y no 500', async () => {
+  const n = await nuevo();
+  for (const t of ['x', 'secretoooooooooooooooooooooooooo', '']) {
+    assert.equal((await fetch(url(n, '/cambios?desde=0'), { headers: { Authorization: `Bearer ${t}` } })).status, 401);
+  }
+  await n.cerrar();
+});
+
 test('JSON roto da 400 y el servidor sigue', async () => {
   const n = await nuevo();
   assert.equal((await fetch(url(n, '/escaneos'), { method: 'POST', headers: auth, body: '{roto' })).status, 400);

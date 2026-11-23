@@ -1,6 +1,10 @@
 import { createServer } from 'node:http';
 import { DatabaseSync } from 'node:sqlite';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
+
+// Se comparan los hashes para que tengan siempre la misma longitud y no lance con tokens de otro largo.
+const hash = (t) => createHash('sha256').update(String(t ?? '')).digest();
+const tokenValido = (recibido, token) => timingSafeEqual(hash(recibido), hash(`Bearer ${token}`));
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -45,7 +49,7 @@ export async function iniciarNucleo({ archivoBase, puerto, host, token, version,
       const u = new URL(req.url, 'http://x');
       if (req.method === 'OPTIONS') { res.writeHead(204, CORS); return res.end(); }
       if (req.method === 'GET' && u.pathname === '/hola') return responder(res, 200, { ok: true, version, id });
-      if (req.headers.authorization !== `Bearer ${token}`) return responder(res, 401, { error: 'no autorizado' });
+      if (!tokenValido(req.headers.authorization, token)) return responder(res, 401, { error: 'no autorizado' });
 
       if (req.method === 'POST' && u.pathname === '/escaneos') {
         let datos;

@@ -1,6 +1,7 @@
 {
   "name": "halcon-pruebas",
   "version": "0.0.1",
+  "productName": "Halcon Pruebas",
   "private": true,
   "type": "module",
   "description": "Pruebas tecnicas descartables de Halcon",
