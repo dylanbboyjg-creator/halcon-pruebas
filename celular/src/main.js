@@ -20,13 +20,13 @@ async function abrirCamara(formats, porCodigo) {
   const oyente = await BarcodeScanner.addListener('barcodesScanned', ({ barcodes }) => {
     for (const b of barcodes) if (b.rawValue) porCodigo(b.rawValue);
   });
-  await BarcodeScanner.startScan({ formats });
-  return async () => {
+  const limpiar = async () => {
     await oyente.remove();
-    await BarcodeScanner.stopScan();
     document.documentElement.classList.remove('escaneando');
     document.body.classList.remove('escaneando');
   };
+  try { await BarcodeScanner.startScan({ formats }); } catch (e) { await limpiar(); throw e; }
+  return async () => { await limpiar(); await BarcodeScanner.stopScan(); };
 }
 
 function pintarVinculo() {
@@ -43,12 +43,14 @@ async function vincular() {
       abrirCamara([BarcodeFormat.QrCode], (t) => resolver(t)).then((p) => { parar = p; }, rechazar);
     });
     await parar?.();
+    parar = null;
     const v = leerQr(texto);
-    localStorage.setItem(CLAVE, JSON.stringify(v));
-    pintarVinculo();
     const r = await CapacitorHttp.get({ url: `${urlBase(v)}/hola`, connectTimeout: 5000, readTimeout: 5000 });
-    if (r.status === 200 && r.data?.id === v.id) $('estado').textContent = `Conectado (${v.h}:${v.p})`;
-    else throw new Error(`El notebook respondió algo inesperado (estado ${r.status})`);
+    if (r.status === 200 && r.data?.id === v.id) {
+      localStorage.setItem(CLAVE, JSON.stringify(v)); // se guarda solo si el notebook es el del QR
+      pintarVinculo();
+      $('estado').textContent = `Conectado (${v.h}:${v.p})`;
+    } else throw new Error(`El notebook respondió algo inesperado (estado ${r.status})`);
   } catch (e) {
     await parar?.();
     mostrarError(e);

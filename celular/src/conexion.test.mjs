@@ -11,3 +11,15 @@ test('rechaza un QR que no es nuestro', () => {
   assert.throws(() => leerQr('7790001000019'), /QR no válido/);
   assert.throws(() => leerQr('{"h":"192.168.0.42"}'), /QR no válido/);
 });
+test('rechaza direcciones que no son de red privada y puertos raros', () => {
+  for (const q of [
+    '{"h":"8.8.8.8","p":47800,"t":"a","id":"x"}',
+    '{"h":"evil.example","p":47800,"t":"a","id":"x"}',
+    '{"h":"192.168.0.42","p":70000,"t":"a","id":"x"}',
+    '{"h":"192.168.0.999","p":47800,"t":"a","id":"x"}',
+  ]) assert.throws(() => leerQr(q), /QR no válido/);
+});
+test('acepta 10.x y 172.16-31.x', () => {
+  assert.equal(leerQr('{"h":"10.0.0.5","p":47800,"t":"a","id":"x"}').h, '10.0.0.5');
+  assert.equal(leerQr('{"h":"172.20.1.1","p":47800,"t":"a","id":"x"}').h, '172.20.1.1');
+});
