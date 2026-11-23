@@ -1,0 +1,8 @@
+{
+  "appId": "app.halcon.pruebas.celular",
+  "appName": "Halcon Pruebas",
+  "webDir": "dist",
+  "plugins": {
+    "CapacitorHttp": { "enabled": true }
+  }
+}

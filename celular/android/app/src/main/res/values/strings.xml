@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Halcon Pruebas</string>
+    <string name="title_activity_main">Halcon Pruebas</string>
+    <string name="package_name">app.halcon.pruebas.celular</string>
+    <string name="custom_url_scheme">app.halcon.pruebas.celular</string>
+</resources>
