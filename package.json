@@ -1,6 +1,29 @@
 {
-  "name": "seba-pruebas",
+  "name": "halcon-pruebas",
+  "version": "0.0.1",
   "private": true,
   "type": "module",
-  "scripts": { "test": "node --test" }
+  "description": "Pruebas tecnicas descartables de Halcon",
+  "author": "Halcon",
+  "main": "escritorio/main.mjs",
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.11",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "electron": "^45.4.1",
+    "electron-builder": "^26.18.0"
+  },
+  "build": {
+    "appId": "app.halcon.pruebas",
+    "productName": "Halcon Pruebas",
+    "files": ["nucleo/**", "escritorio/**"],
+    "artifactName": "halcon-pruebas-${version}.${ext}",
+    "win": { "target": "nsis" },
+    "nsis": { "perMachine": true, "oneClick": true, "include": "escritorio/instalador.nsh" },
+    "publish": { "provider": "github", "releaseType": "release" }
+  }
 }

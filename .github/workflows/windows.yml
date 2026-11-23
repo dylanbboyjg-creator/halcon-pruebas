@@ -1,0 +1,38 @@
+name: windows
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+jobs:
+  armar:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm test
+      - name: Poner la version de la etiqueta
+        run: |
+          $v = "${env:GITHUB_REF_NAME}".TrimStart('v')
+          npm version --no-git-tag-version --allow-same-version $v
+      - run: npx electron-builder --win --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  humo:
+    needs: armar
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bajar el instalador del release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $v = "${env:GITHUB_REF_NAME}".TrimStart('v')
+          gh release download $env:GITHUB_REF_NAME --pattern "halcon-pruebas-$v.exe" --dir ${{ runner.temp }}
+      - name: Prueba de humo
+        run: |
+          $v = "${env:GITHUB_REF_NAME}".TrimStart('v')
+          ./pruebas/humo-windows.ps1 -Instalador "${{ runner.temp }}\halcon-pruebas-$v.exe" -Version $v

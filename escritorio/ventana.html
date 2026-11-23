@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<title>Halcon Pruebas</title>
+<style>body{font-family:sans-serif;margin:16px}img{display:block}li{font-family:monospace}</style>
+<h1>Halcon Pruebas</h1>
+<p>Versión <b id="version"></b> · <span id="direccion"></span></p>
+<img id="qr" alt="QR de conexión">
+<h2>Escaneos</h2>
+<ul id="lista"></ul>
+<script>
+  const q = new URLSearchParams(location.search);
+  version.textContent = q.get('version');
+  direccion.textContent = `${q.get('ip')}:${q.get('puerto')}`;
+  qr.src = q.get('qr');
+  let desde = 0;
+  (async function bucle() {
+    for (;;) {
+      try {
+        const r = await fetch(`http://127.0.0.1:${q.get('puerto')}/cambios?desde=${desde}`, { headers: { Authorization: `Bearer ${q.get('token')}` } });
+        const d = await r.json();
+        for (const e of d.escaneos) lista.insertAdjacentHTML('afterbegin', `<li>${e.seq}: ${e.codigo.replace(/</g, '&lt;')}</li>`);
+        desde = d.seq;
+      } catch { await new Promise((ok) => setTimeout(ok, 2000)); }
+    }
+  })();
+</script>
+</html>
