@@ -17,6 +17,14 @@ export function leerQr(texto) {
 
 export const urlBase = (v) => `http://${v.h}:${v.p}`;
 
+// HMAC-SHA256 en hexadecimal. Sirve para comprobar que quien contesta conoce la clave del QR sin que la clave viaje.
+export async function firma(clave, texto) {
+  const cod = new TextEncoder();
+  const k = await crypto.subtle.importKey('raw', cod.encode(clave), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const f = await crypto.subtle.sign('HMAC', k, cod.encode(texto));
+  return [...new Uint8Array(f)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 // Las otras direcciones de la red /24, de la más cercana a la más lejana (en empate, la menor primero).
 export function candidatas(h) {
   const i = h.lastIndexOf('.') + 1;

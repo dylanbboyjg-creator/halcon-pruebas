@@ -1,6 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { leerQr, urlBase, candidatas, buscarNotebook } from './conexion.js';
+import { createHmac } from 'node:crypto';
+import { leerQr, urlBase, candidatas, buscarNotebook, firma } from './conexion.js';
+
+test('firma coincide con el HMAC-SHA256 de Node', async () => {
+  assert.equal(await firma('secreto', 'uso.id.192.168.0.44'), createHmac('sha256', 'secreto').update('uso.id.192.168.0.44').digest('hex'));
+});
 
 test('lee un QR bueno', () => {
   const v = leerQr('{"h":"192.168.0.42","p":47800,"t":"abc","id":"x"}');

@@ -1,6 +1,6 @@
 import { createServer } from 'node:http';
 import { DatabaseSync } from 'node:sqlite';
-import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 
 // Se comparan los hashes para que tengan siempre la misma longitud y no lance con tokens de otro largo.
 const hash = (t) => createHash('sha256').update(String(t ?? '')).digest();
@@ -64,7 +64,15 @@ export async function iniciarNucleo({ archivoBase, puerto, host, token, version,
       // Para diagnosticar pruebas con el celular: quién pidió qué y qué se le respondió.
       if (process.env.HALCON_LOG) res.on('close', () => console.log(new Date().toISOString(), req.socket.remoteAddress, req.method, u.pathname, res.statusCode));
       if (req.method === 'OPTIONS') { res.writeHead(204, CORS); return res.end(); }
-      if (req.method === 'GET' && u.pathname === '/hola') return responder(res, 200, { ok: true, version, id });
+      if (req.method === 'GET' && u.pathname === '/hola') {
+        // Con un número de un solo uso, la notebook demuestra que conoce la clave sin mandarla.
+        // La prueba va atada a la dirección por la que entró el pedido: otro equipo no puede pedirla acá y presentarla como propia.
+        const n = u.searchParams.get('n');
+        const prueba = n && /^[\w-]{16,64}$/.test(n)
+          ? createHmac('sha256', token).update(`${n}.${id}.${req.socket.localAddress.replace('::ffff:', '')}`).digest('hex')
+          : undefined;
+        return responder(res, 200, { ok: true, version, id, prueba });
+      }
       if (!tokenValido(req.headers.authorization, token)) return responder(res, 401, { error: 'no autorizado' });
 
       if (req.method === 'POST' && (u.pathname === '/escaneos' || u.pathname === '/productos')) {

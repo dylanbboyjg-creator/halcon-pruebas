@@ -4,6 +4,7 @@ import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
+import { createHmac } from 'node:crypto';
 import { iniciarNucleo } from './servidor.mjs';
 
 const base = () => join(mkdtempSync(join(tmpdir(), 'halcon-')), 'datos.sqlite');
@@ -13,6 +14,16 @@ const auth = { Authorization: 'Bearer secreto', 'Content-Type': 'application/jso
 const post = (n, ruta, cuerpo) => fetch(url(n, ruta), { method: 'POST', headers: auth, body: typeof cuerpo === 'string' ? cuerpo : JSON.stringify(cuerpo) });
 const escanear = (n, codigo, id = `id-${codigo}`, extra = {}) => post(n, '/escaneos', { id, codigo, ...extra });
 const cambios = async (n, desde = 0) => (await fetch(url(n, `/cambios?desde=${desde}`), { headers: auth })).json();
+
+test('hola con número de un solo uso devuelve la prueba atada a la clave, el id y la dirección', async () => {
+  const n = await nuevo();
+  const uso = 'abcdefghijklmnop-1234';
+  const d = await (await fetch(url(n, `/hola?n=${uso}`))).json();
+  assert.equal(d.prueba, createHmac('sha256', 'secreto').update(`${uso}.${d.id}.127.0.0.1`).digest('hex'));
+  assert.equal((await (await fetch(url(n, '/hola'))).json()).prueba, undefined);
+  assert.equal((await (await fetch(url(n, '/hola?n=corto'))).json()).prueba, undefined);
+  await n.cerrar();
+});
 
 test('hola responde sin token', async () => {
   const n = await nuevo();
