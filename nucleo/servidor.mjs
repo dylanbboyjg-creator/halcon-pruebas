@@ -47,6 +47,8 @@ export async function iniciarNucleo({ archivoBase, puerto, host, token, version,
   const servidor = createServer(async (req, res) => {
     try {
       const u = new URL(req.url, 'http://x');
+      // Para diagnosticar pruebas con el celular: quién pidió qué y qué se le respondió.
+      if (process.env.HALCON_LOG) res.on('close', () => console.log(new Date().toISOString(), req.socket.remoteAddress, req.method, u.pathname, res.statusCode));
       if (req.method === 'OPTIONS') { res.writeHead(204, CORS); return res.end(); }
       if (req.method === 'GET' && u.pathname === '/hola') return responder(res, 200, { ok: true, version, id });
       if (!tokenValido(req.headers.authorization, token)) return responder(res, 401, { error: 'no autorizado' });
