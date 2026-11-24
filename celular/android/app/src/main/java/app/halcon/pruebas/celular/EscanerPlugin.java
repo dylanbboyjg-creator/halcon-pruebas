@@ -401,7 +401,11 @@ public class EscanerPlugin extends Plugin {
         for (Map.Entry<String, String> e : enCuadro.entrySet()) {
             String valor = e.getKey();
             Long hasta = ignoradosHasta.get(valor);
-            if (hasta != null && ahora < hasta) continue;
+            if (hasta != null && ahora < hasta) {
+                // Mientras siga a la vista no vuelve a contar: recién cuenta de nuevo cuando estuvo repetirMs sin verse.
+                ignoradosHasta.put(valor, ahora + repetirMs);
+                continue;
+            }
             int n = lecturas.merge(valor, 1, Integer::sum);
             if (n < LECTURAS_NECESARIAS) continue;
             lecturas.remove(valor);

@@ -70,7 +70,7 @@
     <form method="dialog" id="form-teclado">
       <header><h2>Escribir el código</h2><button type="button" class="icono" data-cerrar aria-label="Cerrar"><svg class="i"><use href="#i-cerrar"/></svg></button></header>
       <label for="campo-codigo">Números que están debajo de las barras</label>
-      <input id="campo-codigo" name="codigo" inputmode="numeric" autocomplete="off" maxlength="64" required>
+      <input id="campo-codigo" name="codigo" autofocus inputmode="numeric" autocomplete="off" maxlength="64" required>
       <button class="boton lleno" value="ok">Agregar</button>
     </form>
   </dialog>
@@ -80,7 +80,7 @@
       <header><h2>Producto nuevo</h2><button type="button" class="icono" data-cerrar aria-label="Cerrar"><svg class="i"><use href="#i-cerrar"/></svg></button></header>
       <p id="producto-codigo" class="dato"></p>
       <label for="campo-nombre">Nombre</label>
-      <input id="campo-nombre" name="nombre" autocomplete="off" maxlength="80" required>
+      <input id="campo-nombre" name="nombre" autofocus autocomplete="off" maxlength="80" required>
       <label for="campo-precio">Precio en pesos</label>
       <input id="campo-precio" name="precio" inputmode="numeric" autocomplete="off" pattern="[0-9]{1,6}" required>
       <p id="producto-error" class="error" role="alert"></p>
