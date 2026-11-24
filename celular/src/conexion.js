@@ -16,3 +16,27 @@ export function leerQr(texto) {
 }
 
 export const urlBase = (v) => `http://${v.h}:${v.p}`;
+
+// Las otras direcciones de la red /24, de la más cercana a la más lejana (en empate, la menor primero).
+export function candidatas(h) {
+  const i = h.lastIndexOf('.') + 1;
+  const pre = h.slice(0, i), n = Number(h.slice(i));
+  return Array.from({ length: 254 }, (_, k) => k + 1)
+    .filter((k) => k !== n)
+    .sort((a, b) => Math.abs(a - n) - Math.abs(b - n) || a - b)
+    .map((k) => pre + k);
+}
+
+// Si la IP del QR cambió (DHCP), busca la notebook por su identificador en la misma red.
+export async function buscarNotebook(v, pedirHola, tanda = 32) {
+  const es = async (h) => (await pedirHola(h).catch(() => null)) === v.id;
+  if (await es(v.h)) return v;
+  const lista = candidatas(v.h);
+  for (let i = 0; i < lista.length; i += tanda) {
+    const hs = lista.slice(i, i + tanda);
+    const ok = await Promise.all(hs.map(es));
+    const k = ok.indexOf(true);
+    if (k >= 0) return { ...v, h: hs[k] };
+  }
+  return null;
+}

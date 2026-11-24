@@ -2,25 +2,35 @@
 <html lang="es">
 <meta charset="utf-8">
 <title>Halcon Pruebas</title>
-<style>body{font-family:sans-serif;margin:16px}img{display:block}li{font-family:monospace}</style>
+<style>body{font-family:sans-serif;margin:16px}img{display:block}table{border-collapse:collapse;min-width:420px}th,td{padding:6px 12px;border-bottom:1px solid #ddd;text-align:right}th:first-child,td:first-child{text-align:left}tfoot td{font-weight:bold;font-size:1.2em;border-bottom:0}small{color:#666}</style>
 <h1>Halcon Pruebas</h1>
 <p>Versión <b id="version"></b> · <span id="direccion"></span></p>
 <img id="qr" alt="QR de conexión">
 <h2>Escaneos</h2>
-<ul id="lista"></ul>
+<table><thead><tr><th>Producto</th><th>Cant.</th><th>Precio</th><th>Subtotal</th></tr></thead><tbody id="lista"></tbody><tfoot><tr><td colspan="3">Total</td><td id="total"></td></tr></tfoot></table>
 <script>
   const q = new URLSearchParams(location.search);
   version.textContent = q.get('version');
   direccion.textContent = `${q.get('ip')}:${q.get('puerto')}`;
   qr.src = q.get('qr');
+  const esc = (t) => String(t).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+  // Precios en centavos enteros; $ 1.250 (con ,50 solo si hay centavos).
+  const pesos = (c) => `$ ${Math.floor(c / 100).toLocaleString('es-AR')}${c % 100 ? ',' + String(c % 100).padStart(2, '0') : ''}`;
   let desde = 0;
   (async function bucle() {
     for (;;) {
       try {
         const r = await fetch(`http://127.0.0.1:${q.get('puerto')}/cambios?desde=${desde}`, { headers: { Authorization: `Bearer ${q.get('token')}` } });
         const d = await r.json();
-        for (const e of d.escaneos) lista.insertAdjacentHTML('afterbegin', `<li>${e.seq}: ${e.codigo.replace(/</g, '&lt;')}</li>`);
-        desde = d.seq;
+        let total = 0;
+        lista.innerHTML = d.escaneos.map((e) => {
+          const sub = e.precio === null ? null : e.precio * e.cantidad;
+          total += sub ?? 0;
+          const nombre = e.nombre === null ? `Producto nuevo <small>${esc(e.codigo)}</small>` : esc(e.nombre);
+          return `<tr><td>${nombre}</td><td>${e.cantidad}</td><td>${e.precio === null ? '' : pesos(e.precio)}</td><td>${sub === null ? '' : pesos(sub)}</td></tr>`;
+        }).join('');
+        document.getElementById('total').textContent = pesos(total);
+        desde = d.version;
       } catch { await new Promise((ok) => setTimeout(ok, 2000)); }
     }
   })();

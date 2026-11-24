@@ -22,9 +22,11 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npx cap sync android
-      - run: ./gradlew assembleDebug
+      - run: ./gradlew assembleRelease
         working-directory: celular/android
-      - run: gh release create "$GITHUB_REF_NAME" celular/android/app/build/outputs/apk/debug/app-debug.apk#halcon-pruebas.apk --notes "APK de prueba"
+      - run: cp celular/android/app/build/outputs/apk/release/app-release.apk halcon-pruebas.apk
+        working-directory: .
+      - run: gh release create "$GITHUB_REF_NAME" halcon-pruebas.apk --notes "APK de prueba"
         working-directory: .
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
