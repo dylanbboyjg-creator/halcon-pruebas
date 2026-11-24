@@ -39,6 +39,7 @@ async function prender(formatos, marco) {
 function camaraApagada() {
   clearTimeout(reloj);
   linterna = false;
+  zoom = 1;
   $('btn-linterna').setAttribute('aria-pressed', 'false');
 }
 
@@ -60,6 +61,7 @@ async function prenderEscaner() {
     if ($('aviso').dataset.tipo === 'camara') avisar(null);
     descansar();
   } catch (e) {
+    if (e.code === 'CANCELADA') return; // otro pedido la apagó o la volvió a prender
     avisar('camara', e.message || 'No pude abrir la cámara.', 'Probar de nuevo', prenderEscaner);
   }
 }
@@ -78,10 +80,11 @@ async function vincular() {
   vista('vincular');
   try {
     await prender(['QR_CODE'], $('marco-qr'));
+    if (raiz.dataset.vista !== 'vincular') return void Escaner.detener(); // se canceló mientras pedía el permiso
     modo = 'qr';
   } catch (e) {
     vista('inicio');
-    $('inicio-error').textContent = e.message || 'No pude abrir la cámara.';
+    $('inicio-error').textContent = e.code === 'CANCELADA' ? '' : e.message || 'No pude abrir la cámara.';
   }
 }
 
@@ -152,10 +155,11 @@ async function enviar(item, automatico = false) {
 
 // Se quita de la pantalla recién cuando la notebook lo borró.
 async function quitar(item) {
+  if (item.cantidad > 1) return; // lo volvieron a escanear antes de quitarlo: gana el escaneo
   try {
     await api.escaneo(v, { id: item.id, codigo: item.codigo, cantidad: 0 });
-    lista.cambiarCantidad(item.id, -item.cantidad);
-    if (ultimoId === item.id) ultimoId = lista.items()[0]?.id ?? null;
+    // Saca solo la unidad que se quitó: si lo escanearon mientras tanto, el renglón queda y el envío en cola lo vuelve a crear.
+    if (lista.cambiarCantidad(item.id, -1)?.cantidad === 0 && ultimoId === item.id) ultimoId = lista.items()[0]?.id ?? null;
   } catch {
     lista.fallar(item.id, 'No se pudo quitar: la notebook no contesta');
     atencion();
@@ -281,7 +285,10 @@ async function abrirHoja(h) {
   camaraApagada();
   h.showModal();
 }
-for (const h of hojas) h.addEventListener('close', () => { if (raiz.dataset.vista === 'escanear') prenderEscaner(); });
+for (const h of hojas) {
+  h.querySelector('[data-cerrar]').onclick = () => h.close();
+  h.addEventListener('close', () => { if (raiz.dataset.vista === 'escanear') prenderEscaner(); });
+}
 
 $('btn-teclado').onclick = () => { $('campo-codigo').value = ''; abrirHoja($('hoja-teclado')); };
 $('form-teclado').addEventListener('submit', (e) => {
@@ -338,9 +345,7 @@ $('btn-olvidar').onclick = (e) => {
     return;
   }
   localStorage.removeItem('vinculo');
-  v = null;
-  vista('inicio');
-  $('hoja-ajustes').close();
+  location.reload(); // arranca de cero: sin lista, sin envíos en cola ni búsquedas a medias de la notebook olvidada
 };
 
 // ---------- Gestos sobre la cámara: tocar enfoca, dos dedos hacen zoom ----------
@@ -393,7 +398,7 @@ document.addEventListener('visibilitychange', () => {
 
 Escaner.addListener('codigo', ({ valor }) => {
   if (modo === 'qr') alQr(valor);
-  else if (modo === 'productos') alLeer(valor);
+  else if (modo === 'productos') alLeer(valor.replace(/^\]C1/, '')); // el lector antepone ]C1 a los códigos GS1-128; un lector USB no
 });
 
 if (v) abrirEscaner();

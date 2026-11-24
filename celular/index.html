@@ -68,7 +68,7 @@
 
   <dialog id="hoja-teclado" class="hoja">
     <form method="dialog" id="form-teclado">
-      <header><h2>Escribir el código</h2><button class="icono" value="cerrar" aria-label="Cerrar" formnovalidate><svg class="i"><use href="#i-cerrar"/></svg></button></header>
+      <header><h2>Escribir el código</h2><button type="button" class="icono" data-cerrar aria-label="Cerrar"><svg class="i"><use href="#i-cerrar"/></svg></button></header>
       <label for="campo-codigo">Números que están debajo de las barras</label>
       <input id="campo-codigo" name="codigo" inputmode="numeric" autocomplete="off" maxlength="64" required>
       <button class="boton lleno" value="ok">Agregar</button>
@@ -77,7 +77,7 @@
 
   <dialog id="hoja-producto" class="hoja">
     <form method="dialog" id="form-producto">
-      <header><h2>Producto nuevo</h2><button class="icono" value="cerrar" aria-label="Cerrar" formnovalidate><svg class="i"><use href="#i-cerrar"/></svg></button></header>
+      <header><h2>Producto nuevo</h2><button type="button" class="icono" data-cerrar aria-label="Cerrar"><svg class="i"><use href="#i-cerrar"/></svg></button></header>
       <p id="producto-codigo" class="dato"></p>
       <label for="campo-nombre">Nombre</label>
       <input id="campo-nombre" name="nombre" autocomplete="off" maxlength="80" required>
@@ -90,7 +90,7 @@
 
   <dialog id="hoja-ajustes" class="hoja">
     <form method="dialog">
-      <header><h2>Ajustes</h2><button class="icono" value="cerrar" aria-label="Cerrar"><svg class="i"><use href="#i-cerrar"/></svg></button></header>
+      <header><h2>Ajustes</h2><button type="button" class="icono" data-cerrar aria-label="Cerrar"><svg class="i"><use href="#i-cerrar"/></svg></button></header>
       <label class="llave"><span>Sonido al leer</span><input type="checkbox" id="aj-sonido"></label>
       <label class="llave"><span>Vibración al leer</span><input type="checkbox" id="aj-vibracion"></label>
       <p id="aj-notebook" class="dato"></p>

@@ -51,7 +51,8 @@ export async function iniciarNucleo({ archivoBase, puerto, host, token, version,
   // Si se pasa del tope sigue leyendo sin guardar (para poder contestar 413) y devuelve null.
   const leerCuerpo = (req) => new Promise((ok, mal) => {
     let t = '', largo = 0;
-    req.on('data', (c) => { largo += c.length; if (largo <= TOPE) t += c; });
+    req.setEncoding('utf8'); // si no, una letra con tilde partida entre dos pedazos llega rota
+    req.on('data', (c) => { largo += Buffer.byteLength(c); if (largo <= TOPE) t += c; });
     req.on('end', () => ok(largo > TOPE ? null : t));
     req.on('error', mal);
   });

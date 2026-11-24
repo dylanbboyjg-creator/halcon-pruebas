@@ -82,6 +82,7 @@ public class EscanerPlugin extends Plugin {
     private Camera camara;
     private Drawable fondoOriginal;
     private boolean fondoGuardado = false;
+    private int turno = 0; // cambia en cada apagado: un arranque que quedó viejo no prende nada
 
     // Se toca solo dentro de synchronized (this).
     private ToneGenerator tono;
@@ -156,6 +157,7 @@ public class EscanerPlugin extends Plugin {
 
         getActivity().runOnUiThread(() -> {
             detenerEnUi();
+            final int mio = turno;
             try {
                 zonaArriba = arriba;
                 zonaAbajo = abajo;
@@ -167,6 +169,10 @@ public class EscanerPlugin extends Plugin {
                 ListenableFuture<ProcessCameraProvider> futuro = ProcessCameraProvider.getInstance(getContext());
                 futuro.addListener(
                     () -> {
+                        if (mio != turno) {
+                            call.reject("Se canceló el arranque de la cámara.", "CANCELADA");
+                            return;
+                        }
                         try {
                             proveedor = futuro.get();
 
@@ -326,6 +332,7 @@ public class EscanerPlugin extends Plugin {
 
     // Debe correr en el hilo principal. Es seguro llamarlo sin nada prendido.
     private void detenerEnUi() {
+        turno++;
         BarcodeScanner anterior = lector;
         lector = null;
         if (anterior != null) anterior.close();
